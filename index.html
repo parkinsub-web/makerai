@@ -1,0 +1,2508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOS LLM Studio</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #06070a;
+            --panel: #16191f;
+            --panel-2: #1b1f27;
+            --line: #2b303a;
+            --text: #ecf0f7;
+            --muted: #9ca4b1;
+            --muted-2: #78808c;
+            --chip: #12151b;
+            --chip-hover: #1a1f27;
+            --danger: #ef707f;
+            --ok: #37d285;
+            --radius-xl: 30px;
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            --composer-width: 860px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(1200px 600px at 50% -30%, #121621 0%, transparent 55%), var(--bg);
+            color: var(--text);
+            font-family: 'Manrope', 'Pretendard', sans-serif;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            border-right: 1px solid #20242d;
+            background: linear-gradient(180deg, #171a1f, #121418);
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            position: sticky;
+            top: 0;
+            align-self: start;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar-top {
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            color: #cad1db;
+            font-size: 12px;
+            padding: 0 4px;
+        }
+
+        .circle-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            border: 1px solid #343b48;
+            background: #161b22;
+            color: #d2d8e2;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .sidebar-brand {
+            font-size: 24px;
+            font-weight: 700;
+            color: #dde3ec;
+            letter-spacing: -0.02em;
+            margin-left: 6px;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            color: #b6becb;
+            margin: 14px 8px 8px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        .prompt-list {
+            list-style: none;
+            overflow-y: auto;
+            padding: 0 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-height: 160px;
+            max-height: 56vh;
+        }
+
+        .prompt-item {
+            color: #c9d1dc;
+            font-size: 12px;
+            line-height: 1.3;
+            border-radius: 10px;
+            padding: 8px 10px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .prompt-item-label {
+            min-width: 0;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .prompt-item:hover {
+            border-color: #2b313c;
+            background: #1b2028;
+        }
+
+        .prompt-item.active {
+            background: #22365a;
+            border-color: #2d4f83;
+            color: #eaf2ff;
+        }
+
+        .quick-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 8px 2px 4px;
+        }
+
+        .quick-nav-btn {
+            border: 1px solid transparent;
+            background: transparent;
+            color: #d4dbe5;
+            border-radius: 10px;
+            height: 34px;
+            padding: 0 10px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .quick-nav-btn:hover {
+            background: #1a1f27;
+            border-color: #2d3440;
+        }
+
+        .quick-nav-btn.active {
+            background: #22365a;
+            border-color: #2e4f83;
+            color: #e9f1ff;
+        }
+
+        .rag-panel {
+            margin: 14px 4px 0;
+            padding-top: 10px;
+            border-top: 1px solid #242a33;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .rag-upload-btn {
+            border: 1px solid #2a3140;
+            background: #161b22;
+            color: #d4dbe5;
+            border-radius: 10px;
+            height: 32px;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .rag-upload-btn:hover {
+            background: #1b212b;
+            border-color: #354055;
+        }
+
+        .rag-list {
+            list-style: none;
+            overflow-y: auto;
+            min-height: 0;
+            max-height: 22vh;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 2px;
+        }
+
+        .rag-item {
+            border: 1px solid #29303b;
+            background: #141921;
+            border-radius: 10px;
+            padding: 7px 8px 7px 10px;
+            font-size: 11px;
+            color: #cfd6e2;
+            line-height: 1.35;
+            position: relative;
+        }
+
+        .rag-item-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .rag-item-head {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .rag-item-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 700;
+        }
+
+        .rag-item-meta {
+            margin-top: 2px;
+            color: #96a0af;
+            font-size: 11px;
+        }
+
+        .rag-menu-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #b7c0cd;
+            font-size: 17px;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .rag-menu-btn:hover,
+        .rag-menu-btn:focus-visible {
+            border-color: #334051;
+            background: #1b222d;
+            color: #eef3fa;
+        }
+
+        .rag-action-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(60% 60% at 50% 50%, rgba(14, 18, 26, 0.58) 0%, rgba(6, 7, 10, 0.78) 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1350;
+            padding: 18px;
+        }
+
+        .rag-action-overlay.open {
+            display: flex;
+        }
+
+        .rag-action-modal {
+            width: min(420px, calc(100vw - 36px));
+            border-radius: 14px;
+            border: 1px solid #354156;
+            background: linear-gradient(180deg, #1a212d, #151b25);
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.48);
+            padding: 14px;
+            margin: 0 auto;
+            transform: translateY(8px);
+            opacity: 0;
+            transition: transform 0.16s ease, opacity 0.16s ease;
+        }
+
+        .rag-action-overlay.open .rag-action-modal {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .rag-action-title {
+            font-size: 12px;
+            color: #93a0b4;
+            margin-bottom: 3px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        .rag-action-doc {
+            font-size: 15px;
+            color: #edf2fa;
+            font-weight: 750;
+            line-height: 1.35;
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+
+        .rag-action-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .rag-action-btn {
+            width: 100%;
+            height: 38px;
+            border-radius: 8px;
+            border: 0;
+            background: #1c2431;
+            color: #dce4f0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid #2f3a4b;
+        }
+
+        .rag-action-btn:hover {
+            background: #232d3b;
+            color: #f3f7ff;
+            border-color: #41526b;
+        }
+
+        .rag-action-btn.cancel {
+            justify-content: center;
+            margin-top: 2px;
+            background: transparent;
+            color: #b9c3d2;
+            border-color: #344153;
+        }
+
+        .rag-rename-form {
+            display: none;
+            margin-top: 8px;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .rag-rename-form.open {
+            display: flex;
+        }
+
+        .rag-rename-input {
+            width: 100%;
+            height: 38px;
+            border-radius: 9px;
+            border: 1px solid #3a475c;
+            background: #10161f;
+            color: #e9eef8;
+            font-size: 13px;
+            padding: 0 11px;
+        }
+
+        .rag-rename-input:focus {
+            outline: none;
+            border-color: #4f74aa;
+            box-shadow: 0 0 0 2px rgba(79, 116, 170, 0.16);
+        }
+
+        .rag-rename-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .rag-rename-actions .rag-action-btn {
+            justify-content: center;
+            flex: 1;
+        }
+
+        .rag-rename-actions .save {
+            background: #23558b;
+            border-color: #3368a1;
+            color: #f4f8ff;
+        }
+
+        .rag-rename-actions .save:hover {
+            background: #2b639f;
+            border-color: #3f79b8;
+        }
+
+        .rag-edit-form {
+            display: none;
+            margin-top: 8px;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .rag-edit-form.open {
+            display: flex;
+        }
+
+        .rag-edit-textarea {
+            width: 100%;
+            min-height: 220px;
+            max-height: min(56vh, 520px);
+            resize: vertical;
+            border-radius: 9px;
+            border: 1px solid #3a475c;
+            background: #10161f;
+            color: #e9eef8;
+            font-size: 13px;
+            line-height: 1.45;
+            padding: 10px 11px;
+            font-family: 'Manrope', 'Pretendard', sans-serif;
+        }
+
+        .rag-edit-textarea:focus {
+            outline: none;
+            border-color: #4f74aa;
+            box-shadow: 0 0 0 2px rgba(79, 116, 170, 0.16);
+        }
+
+        .rag-edit-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .rag-edit-actions .rag-action-btn {
+            justify-content: center;
+            flex: 1;
+        }
+
+        .rag-empty {
+            font-size: 11px;
+            color: #8d96a3;
+            padding: 2px 2px 4px;
+        }
+
+        .prompt-delete-btn {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #8f99a8;
+            font-size: 12px;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .prompt-delete-btn:hover {
+            border-color: #324052;
+            background: #1a2230;
+            color: #d6deea;
+        }
+
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(60% 60% at 50% 50%, rgba(14, 18, 26, 0.55) 0%, rgba(6, 7, 10, 0.72) 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+            padding: 20px;
+        }
+
+        .confirm-overlay.open {
+            display: flex;
+        }
+
+        .confirm-modal {
+            width: min(460px, calc(100vw - 40px));
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)),
+                #171b22;
+            border: 1px solid #2e3643;
+            border-radius: 14px;
+            padding: 18px 18px 14px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.03);
+            color: #eef2f8;
+            backdrop-filter: blur(8px);
+        }
+
+        .image-lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(4, 6, 10, 0.88);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1300;
+            padding: 24px;
+        }
+        .image-lightbox.open {
+            display: flex;
+        }
+        .image-lightbox-img {
+            max-width: min(94vw, 1300px);
+            max-height: 90vh;
+            border-radius: 12px;
+            border: 1px solid #2d3441;
+            box-shadow: 0 22px 54px rgba(0, 0, 0, 0.55);
+            object-fit: contain;
+            background: #0e1218;
+        }
+        .image-lightbox-close {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            border: 1px solid #3a4352;
+            background: rgba(17, 22, 30, 0.9);
+            color: #d9e0ea;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .confirm-title {
+            font-size: 14px;
+            line-height: 1.3;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 0.01em;
+            color: #9fb0c8;
+            text-transform: uppercase;
+        }
+
+        .confirm-message {
+            font-size: 26px;
+            line-height: 1.18;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+            color: #edf2f9;
+            font-weight: 650;
+        }
+
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .confirm-btn {
+            min-width: 82px;
+            height: 38px;
+            border-radius: 999px;
+            border: 1px solid #35507a;
+            background: linear-gradient(180deg, #2369a1, #1d5a8c);
+            color: #f3f7ff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0 16px;
+            letter-spacing: -0.01em;
+            transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
+        }
+
+        .confirm-btn:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+
+        .confirm-btn.cancel {
+            background: #1e2430;
+            border-color: #394455;
+            color: #d7e0ec;
+        }
+
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 52px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+            color: #d2d9e2;
+            font-size: 11px;
+            position: sticky;
+            top: 0;
+            background: rgba(6, 7, 10, 0.86);
+            backdrop-filter: blur(6px);
+            z-index: 20;
+        }
+
+        .topbar-left,
+        .topbar-center,
+        .topbar-right {
+            position: absolute;
+            top: 0;
+            height: 52px;
+            display: flex;
+            align-items: center;
+        }
+
+        .topbar-left { left: 16px; color: #d7dee8; font-size: 12px; font-weight: 700; }
+        .topbar-center { left: 50%; transform: translateX(-50%); color: #e3e8f0; font-size: 13px; font-weight: 700; }
+        .topbar-right {
+            right: 16px;
+            gap: 8px;
+        }
+
+        .status,
+        .select,
+        .ghost-btn {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            height: 26px;
+            background: #141820;
+            color: var(--muted);
+            padding: 0 8px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #6f7680;
+        }
+
+        .dot.ok { background: var(--ok); }
+        .dot.fail { background: var(--danger); }
+
+        .select { min-width: 150px; }
+
+        .ghost-btn {
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .ghost-btn:hover {
+            background: #1a1f27;
+            color: #e5ebf2;
+        }
+
+        .main {
+            flex: 1;
+            min-height: calc(100vh - 52px);
+            position: relative;
+            padding: 24px 24px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stage {
+            margin-top: auto;
+            margin-bottom: auto;
+            width: 860px;
+            max-width: 860px;
+            transition: margin 0.25s ease;
+        }
+
+        .hero {
+            margin-bottom: 10px;
+            width: 860px;
+            max-width: 860px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 20px;
+        }
+
+        .hero-kicker {
+            color: #e7ecf3;
+            font-size: 44px;
+            letter-spacing: -0.024em;
+            line-height: 1.1;
+            font-weight: 600;
+        }
+
+        .hero-kicker small {
+            display: block;
+            color: #d3d9e2;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            letter-spacing: -0.015em;
+        }
+
+        .composer {
+            width: 860px;
+            max-width: 860px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, #1f2228, #1a1d23);
+            border: 1px solid #282c34;
+            border-radius: var(--radius-xl);
+            padding: 18px 18px 14px;
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+        }
+
+        .chat-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 19px;
+            line-height: 1.45;
+            min-height: 50px;
+            max-height: 170px;
+            resize: none;
+            font-family: inherit;
+            padding: 2px 2px 0;
+        }
+
+        .chat-input::placeholder {
+            color: #b8bec8;
+            font-size: 17px;
+            font-weight: 500;
+        }
+
+        .chat-input:focus { outline: none; }
+
+        .attachment {
+            margin-top: 8px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: #13161c;
+            border: 1px solid #2b303a;
+            border-radius: 12px;
+            padding: 6px;
+            width: fit-content;
+            max-width: 100%;
+            color: #ccd3dd;
+            font-size: 12px;
+        }
+
+        .attachment-thumb {
+            width: 64px;
+            height: 64px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid #353b47;
+            background: #0f1319;
+            display: block;
+            cursor: zoom-in;
+        }
+
+        .attachment-doc {
+            width: 64px;
+            height: 64px;
+            border-radius: 10px;
+            border: 1px solid #353b47;
+            background: #0f1319;
+            color: #c8d0dc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .attachment-label {
+            font-size: 11px;
+            color: #b9c1cd;
+            max-width: 280px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .attachment-remove {
+            border: 0;
+            background: transparent;
+            color: #aeb6c1;
+            cursor: pointer;
+            font-size: 13px;
+            line-height: 1;
+        }
+
+        .composer-bottom {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .icon-btn,
+        .mode-btn,
+        .send-btn,
+        .tool-btn {
+            border: none;
+            border-radius: 10px;
+            height: 34px;
+            padding: 0 12px;
+            background: transparent;
+            color: #bfc6cf;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .mode-btn {
+            border: 1px solid #343a44;
+            font-size: 12px;
+            font-weight: 700;
+            color: #d2d8e0;
+            background: #171b21;
+        }
+
+        .send-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 0;
+            background: transparent;
+            color: #dbe2ec;
+            font-size: 18px;
+            font-weight: 700;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s ease, transform 0.15s ease;
+        }
+
+        .send-btn:hover {
+            color: #ffffff;
+            transform: translateX(1px);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.32;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hint {
+            margin-top: 4px;
+            color: #858d98;
+            font-size: 10px;
+            padding-left: 2px;
+        }
+        .hint {
+            display: none !important;
+        }
+        .composer-bottom .tool-btn,
+        .composer-bottom .mode-btn,
+        .composer-bottom .icon-btn[title="음성"] {
+            display: none !important;
+        }
+        .safety-note {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: #d7dfeb;
+            line-height: 1.4;
+            letter-spacing: -0.01em;
+            opacity: 0.9;
+            display: none;
+        }
+
+        .app:not(.chat-active) .hint {
+            display: none;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+            justify-content: center;
+        }
+
+        .chip {
+            border: 1px solid #222731;
+            background: var(--chip);
+            color: #d8dde5;
+            border-radius: 999px;
+            height: 30px;
+            padding: 0 11px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .chip:hover {
+            background: var(--chip-hover);
+            border-color: #2f3540;
+        }
+
+        .chat-container {
+            width: min(820px, 100%);
+            margin-top: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+            min-height: auto;
+            overflow: visible;
+            padding-bottom: 12px;
+        }
+
+        .app.chat-active .stage {
+            margin-top: 0;
+            margin-bottom: 0;
+            width: 100%;
+        }
+
+        .app.chat-active .hero,
+        .app.chat-active .chips {
+            display: none;
+        }
+
+        .app.chat-active .chat-container {
+            display: flex;
+            width: min(820px, 100%);
+            padding-bottom: 250px;
+        }
+
+        .app.chat-active .composer {
+            position: fixed;
+            left: calc(280px + (100vw - 280px) / 2);
+            transform: translateX(-50%);
+            bottom: 52px;
+            width: 860px;
+            max-width: 860px;
+            padding: 14px 18px 12px;
+            border-radius: 28px;
+            z-index: 30;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+        }
+        .app.chat-active .safety-note {
+            display: block;
+            position: fixed;
+            left: calc(280px + (100vw - 280px) / 2);
+            transform: translateX(-50%);
+            bottom: 16px;
+            width: min(860px, calc(100vw - 40px));
+            margin: 0;
+            font-size: 11px;
+            line-height: 1.3;
+            z-index: 31;
+        }
+
+        .app.chat-active .main::after {
+            content: "";
+            position: fixed;
+            left: 280px;
+            right: 0;
+            bottom: 0;
+            height: 190px;
+            background: linear-gradient(
+                180deg,
+                rgba(6, 7, 10, 0) 0%,
+                rgba(6, 7, 10, 0.82) 35%,
+                rgba(6, 7, 10, 1) 72%
+            );
+            pointer-events: none;
+            z-index: 24;
+        }
+
+        .msg {
+            display: flex;
+            width: 100%;
+        }
+
+        .msg.user { justify-content: flex-end; }
+        .msg.assistant { justify-content: flex-start; }
+
+        .bubble {
+            max-width: 100%;
+            border-radius: var(--radius-lg);
+            padding: 12px 14px;
+            line-height: 1.5;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .msg.user .bubble {
+            background: #1f232b;
+            color: #e7eaf0;
+            border: 1px solid #2a303a;
+            border-bottom-right-radius: 8px;
+            max-width: min(560px, 88%);
+            font-size: 16px;
+            line-height: 1.42;
+        }
+        .user-inline-thumb {
+            width: 64px;
+            height: 64px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid #353b47;
+            background: #0f1319;
+            display: block;
+            margin-top: 8px;
+            cursor: zoom-in;
+        }
+
+        .msg.assistant .bubble {
+            width: 100%;
+            max-width: 100%;
+            background: transparent;
+            border: none;
+            color: #e7eaf0;
+            border-radius: 0;
+            padding: 0;
+        }
+
+        .md-content {
+            font-size: clamp(14px, 0.96vw, 16px);
+            line-height: 1.42;
+            color: #e7eaf0;
+            letter-spacing: -0.003em;
+            text-wrap: pretty;
+        }
+        .md-content.fade-enter {
+            opacity: 0.22;
+            transform: translateY(2px);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+        .md-content.fade-enter.fade-show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .fade-enter {
+            opacity: 0.18;
+            transform: translateY(3px);
+            transition: opacity 0.32s ease, transform 0.32s ease;
+        }
+        .fade-show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .md-content p { margin: 0 0 2px; }
+        .md-content .md-block {
+            margin: 0 0 7px;
+        }
+        .md-content .md-block:last-child {
+            margin-bottom: 0;
+        }
+        .md-content h1, .md-content h2, .md-content h3 {
+            margin: 4px 0 2px;
+            line-height: 1.24;
+            letter-spacing: -0.015em;
+            color: #29d8e5;
+            font-weight: 800;
+        }
+        .md-content h1 { font-size: 30px; }
+        .md-content h2 { font-size: 24px; }
+        .md-content h3 { font-size: 20px; }
+        .md-content ul, .md-content ol { margin: 1px 0 3px 20px; }
+        .md-content li { margin: 0 0 2px; line-height: 1.35; }
+        .md-content li p { margin: 0; }
+        .md-content a,
+        .md-content a:visited {
+            color: #6f737a;
+            text-decoration: underline;
+            text-decoration-color: #6f737a;
+        }
+        .md-content a:hover {
+            color: #8a9099;
+            text-decoration-color: #8a9099;
+        }
+        .md-content .assistant-inline-image {
+            display: block;
+            width: min(680px, 100%);
+            max-width: 100%;
+            margin: 8px 0 6px;
+            border-radius: 12px;
+            border: 1px solid #2f3643;
+            background: #0f1319;
+            object-fit: contain;
+            cursor: zoom-in;
+        }
+        .md-content strong { color: #f5f7fb; }
+        .md-content code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.93em;
+            background: #171b22;
+            border: 1px solid #2a3040;
+            border-radius: 8px;
+            padding: 1px 6px;
+        }
+        .md-content pre {
+            margin: 8px 0 10px;
+            background: #11151c;
+            border: 1px solid #2a3040;
+            border-radius: 12px;
+            padding: 12px 14px;
+            overflow: auto;
+        }
+        .md-content pre code {
+            background: transparent;
+            border: 0;
+            padding: 0;
+            font-size: 14px;
+        }
+        .md-content blockquote {
+            margin: 2px 0;
+            border-left: 3px solid #3a83f7;
+            padding: 2px 0 2px 10px;
+            color: #c9d2df;
+        }
+        .md-content hr {
+            border: 0;
+            border-top: 1px solid #2a2f39;
+            margin: 12px 0;
+        }
+
+        .msg.error .bubble {
+            background: #2a1519;
+            border: 1px solid #5d2931;
+            color: #ff9cab;
+        }
+
+        .typing {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .typing span {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: #a4abb4;
+            animation: pulse 1.2s infinite ease-in-out;
+        }
+
+        .typing span:nth-child(2) { animation-delay: 0.15s; }
+        .typing span:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes pulse {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.35; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 980px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .main { padding: 18px 10px; }
+            .composer {
+                width: 100%;
+                max-width: calc(100vw - 20px);
+            }
+            .hero {
+                width: 100%;
+                max-width: calc(100vw - 20px);
+            }
+            .stage {
+                width: 100%;
+                max-width: calc(100vw - 20px);
+            }
+            .stage {
+                margin-top: auto;
+                margin-bottom: auto;
+            }
+            .app.chat-active .composer {
+                left: 50%;
+                width: min(800px, calc(100vw - 20px));
+                bottom: 52px;
+            }
+            .app.chat-active .safety-note {
+                left: 50%;
+                width: min(800px, calc(100vw - 20px));
+                bottom: 14px;
+            }
+            .app.chat-active .main::after { left: 0; }
+            .hero-kicker { font-size: 34px; }
+            .hero-kicker small { font-size: 14px; }
+            .md-content { font-size: 15px; line-height: 1.3; }
+            .md-content h1 { font-size: 29px; }
+            .md-content h2 { font-size: 24px; }
+            .md-content h3 { font-size: 19px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout app" id="appRoot">
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <button class="circle-btn" type="button" title="메뉴">☰</button>
+                <button class="circle-btn" type="button" title="검색">⌕</button>
+                <div class="sidebar-brand">Glounder</div>
+            </div>
+            <div class="quick-nav">
+                <button class="quick-nav-btn" type="button">✎ 새 채팅</button>
+                <button class="quick-nav-btn" type="button">☆ 내 항목</button>
+            </div>
+            <div class="sidebar-title">채팅</div>
+            <ul class="prompt-list" id="promptList"></ul>
+            <section class="rag-panel">
+                <div class="sidebar-title" style="margin:0 0 0 2px;">RAG Data</div>
+                <button class="rag-upload-btn" id="ragUploadBtn" type="button">+ 문서 업로드 (PDF/PPT/TXT)</button>
+                <ul class="rag-list" id="ragDocList">
+                    <li class="rag-empty">업로드된 문서가 없습니다.</li>
+                </ul>
+                <input type="file" id="ragFileInput" accept=".pdf,.ppt,.pptx,.txt" style="display:none" />
+            </section>
+        </aside>
+
+        <div class="workspace">
+            <header class="topbar">
+                <div class="topbar-left">Glounder</div>
+                <div class="topbar-center" id="chatTitle">오타 입력에 대한 재치 있는 응답</div>
+                <div class="topbar-right">
+                    <div class="status" id="statusBadge">
+                        <span class="dot" id="statusDot"></span>
+                        <span id="statusText">연결 확인 중</span>
+                    </div>
+                    <select class="select" id="modelSelect" aria-label="모델 선택"></select>
+                    <button class="ghost-btn" id="clearBtn" type="button">새 대화</button>
+                </div>
+            </header>
+
+            <section class="main">
+                <section class="stage" id="stage">
+                    <section class="hero" id="emptyState">
+                        <h1 class="hero-kicker">
+                            <small>✦ 인섭님, 안녕하세요</small>
+                            무엇을 도와드릴까요?
+                        </h1>
+                    </section>
+
+                    <section class="composer" id="composer">
+                        <textarea class="chat-input" id="chatInput" placeholder="Glounder에게 물어보기" rows="1"></textarea>
+                        <div class="attachment" id="attachmentBox">
+                            <img class="attachment-thumb" id="attachmentThumb" alt="첨부 이미지 미리보기" />
+                            <div class="attachment-doc" id="attachmentDoc" style="display:none">DOC</div>
+                            <span class="attachment-label" id="attachmentLabel"></span>
+                            <button class="attachment-remove" id="attachmentRemove" type="button" title="첨부 제거">✕</button>
+                        </div>
+                        <div class="composer-bottom">
+                            <div class="row">
+                                <button class="icon-btn" id="attachBtn" type="button" title="이미지 첨부">＋</button>
+                                <button class="tool-btn" type="button" title="도구">⚙︎ 도구</button>
+                            </div>
+                            <div class="row">
+                                <button class="mode-btn" type="button">빠른 모드</button>
+                                <button class="icon-btn" type="button" title="음성">🎙</button>
+                                <button class="send-btn" id="sendBtn" type="button" title="전송">➤</button>
+                            </div>
+                        </div>
+                        <p class="hint" id="hintText">Ollama 연결 상태를 확인한 뒤 대화를 시작합니다.</p>
+                        <input type="file" id="imageInput" accept="image/*" style="display:none" />
+                    </section>
+                    <p class="safety-note">Glounder AI는 정보,인물 등에 관한 정보 제공 시 실수를 할 수 있습니다.</p>
+
+                    <section class="chips" id="quickActions">
+                        <button class="chip" data-prompt="이미지를 만들어줘">🍌 이미지 만들기</button>
+                        <button class="chip" data-prompt="동영상 기획안을 만들어줘">동영상 만들기</button>
+                        <button class="chip" data-prompt="활기찬 하루를 위한 루틴을 짜줘">활기찬 하루 만들기</button>
+                        <button class="chip" data-prompt="글 초안을 작성해줘">글 작성</button>
+                        <button class="chip" data-prompt="학습을 도와줘">학습에 관한 도움 받기</button>
+                    </section>
+                </section>
+
+                <main class="chat-container" id="chatContainer"></main>
+            </section>
+        </div>
+    </div>
+
+    <div class="confirm-overlay" id="confirmOverlay" aria-hidden="true">
+        <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+            <div class="confirm-title" id="confirmTitle">이 페이지 내용:</div>
+            <div class="confirm-message" id="confirmMessage">삭제하겠습니까?</div>
+            <div class="confirm-actions">
+                <button class="confirm-btn" id="confirmOkBtn" type="button">확인</button>
+                <button class="confirm-btn cancel" id="confirmCancelBtn" type="button">취소</button>
+            </div>
+        </div>
+    </div>
+    <div class="rag-action-overlay" id="ragActionOverlay" aria-hidden="true">
+        <div class="rag-action-modal" role="dialog" aria-modal="true" aria-labelledby="ragActionDoc">
+            <div class="rag-action-title">문서 작업</div>
+            <div class="rag-action-doc" id="ragActionDoc"></div>
+            <div class="rag-action-list" id="ragActionList">
+                <button class="rag-action-btn" id="ragActionRenameBtn" type="button">이름 변경</button>
+                <button class="rag-action-btn" id="ragActionEditBtn" type="button">내용 수정</button>
+                <button class="rag-action-btn" id="ragActionDeleteBtn" type="button">삭제</button>
+                <button class="rag-action-btn cancel" id="ragActionCancelBtn" type="button">취소</button>
+            </div>
+            <form class="rag-rename-form" id="ragRenameForm">
+                <input class="rag-rename-input" id="ragRenameInput" type="text" maxlength="200" />
+                <div class="rag-rename-actions">
+                    <button class="rag-action-btn save" id="ragRenameSaveBtn" type="submit">저장</button>
+                    <button class="rag-action-btn cancel" id="ragRenameCancelBtn" type="button">취소</button>
+                </div>
+            </form>
+            <form class="rag-edit-form" id="ragEditForm">
+                <textarea class="rag-edit-textarea" id="ragEditTextarea" maxlength="200000"></textarea>
+                <div class="rag-edit-actions">
+                    <button class="rag-action-btn save" id="ragEditSaveBtn" type="submit">저장</button>
+                    <button class="rag-action-btn cancel" id="ragEditCancelBtn" type="button">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="image-lightbox" id="imageLightbox" aria-hidden="true">
+        <button class="image-lightbox-close" id="imageLightboxClose" type="button" title="닫기">✕</button>
+        <img class="image-lightbox-img" id="imageLightboxImg" alt="확대 이미지" />
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+    <script>
+        let API_BASE = (window.__API_BASE_URL && typeof window.__API_BASE_URL === 'string')
+            ? window.__API_BASE_URL.replace(/\/$/, '')
+            : 'http://127.0.0.1:8000';
+
+        const LEGACY_API_BASES = [
+            'http://127.0.0.1:8000',
+            'http://localhost:8000',
+            'http://127.0.0.1:8010',
+            'http://localhost:8010',
+        ];
+
+        function apiUrl(path) {
+            return API_BASE ? API_BASE + path : path;
+        }
+
+        function uniq(values) {
+            return Array.from(new Set(values.filter(Boolean)));
+        }
+
+        async function probeApiBase(base) {
+            try {
+                const response = await fetch(base.replace(/\/$/, '') + '/api/health');
+                return response.ok;
+            } catch (_error) {
+                return false;
+            }
+        }
+
+        async function resolveApiBase() {
+            const configured = (window.__API_BASE_URL && typeof window.__API_BASE_URL === 'string')
+                ? window.__API_BASE_URL.replace(/\/$/, '')
+                : '';
+            const sameOrigin = /^https?:$/.test(window.location.protocol)
+                ? (window.location.origin || '')
+                : '';
+
+            const candidates = uniq([configured, sameOrigin, API_BASE, ...LEGACY_API_BASES]);
+            for (const candidate of candidates) {
+                if (await probeApiBase(candidate)) {
+                    API_BASE = candidate.replace(/\/$/, '');
+                    return API_BASE;
+                }
+            }
+            API_BASE = (configured || API_BASE || LEGACY_API_BASES[0]).replace(/\/$/, '');
+            return API_BASE;
+        }
+
+        const appRoot = document.getElementById('appRoot');
+        const promptList = document.getElementById('promptList');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const modelSelect = document.getElementById('modelSelect');
+        const emptyState = document.getElementById('emptyState');
+        const quickActions = document.getElementById('quickActions');
+        const clearBtn = document.getElementById('clearBtn');
+        const chatTitle = document.getElementById('chatTitle');
+        const attachBtn = document.getElementById('attachBtn');
+        const imageInput = document.getElementById('imageInput');
+        const ragUploadBtn = document.getElementById('ragUploadBtn');
+        const ragFileInput = document.getElementById('ragFileInput');
+        const ragDocList = document.getElementById('ragDocList');
+        const attachmentBox = document.getElementById('attachmentBox');
+        const attachmentThumb = document.getElementById('attachmentThumb');
+        const attachmentDoc = document.getElementById('attachmentDoc');
+        const attachmentLabel = document.getElementById('attachmentLabel');
+        const attachmentRemove = document.getElementById('attachmentRemove');
+        const hintText = document.getElementById('hintText');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const confirmOverlay = document.getElementById('confirmOverlay');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmOkBtn = document.getElementById('confirmOkBtn');
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        const ragActionOverlay = document.getElementById('ragActionOverlay');
+        const ragActionDoc = document.getElementById('ragActionDoc');
+        const ragActionList = document.getElementById('ragActionList');
+        const ragActionRenameBtn = document.getElementById('ragActionRenameBtn');
+        const ragActionEditBtn = document.getElementById('ragActionEditBtn');
+        const ragActionDeleteBtn = document.getElementById('ragActionDeleteBtn');
+        const ragActionCancelBtn = document.getElementById('ragActionCancelBtn');
+        const ragRenameForm = document.getElementById('ragRenameForm');
+        const ragRenameInput = document.getElementById('ragRenameInput');
+        const ragRenameCancelBtn = document.getElementById('ragRenameCancelBtn');
+        const ragEditForm = document.getElementById('ragEditForm');
+        const ragEditTextarea = document.getElementById('ragEditTextarea');
+        const ragEditSaveBtn = document.getElementById('ragEditSaveBtn');
+        const ragEditCancelBtn = document.getElementById('ragEditCancelBtn');
+        const imageLightbox = document.getElementById('imageLightbox');
+        const imageLightboxImg = document.getElementById('imageLightboxImg');
+        const imageLightboxClose = document.getElementById('imageLightboxClose');
+
+        let isLoading = false;
+        let chatHistory = [];
+        let attachedImage = null;
+        let ragDocContext = [];
+        let activeRagActionDoc = null;
+        const CONVERSATION_STORAGE_KEY = 'nos_chat_threads_v1';
+        let conversations = [];
+        let activeConversationId = null;
+        let confirmResolver = null;
+        const RAG_SESSION_KEY = 'nos_rag_session_id_v1';
+        let ragSessionId = localStorage.getItem(RAG_SESSION_KEY) || '';
+        if (!ragSessionId) {
+            ragSessionId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+                ? window.crypto.randomUUID()
+                : ('rag-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+            localStorage.setItem(RAG_SESSION_KEY, ragSessionId);
+        }
+
+        function showDeleteConfirm(message) {
+            return new Promise((resolve) => {
+                confirmResolver = resolve;
+                confirmMessage.textContent = message || '삭제하겠습니까?';
+                confirmOverlay.classList.add('open');
+                confirmOverlay.setAttribute('aria-hidden', 'false');
+                confirmOkBtn.focus();
+            });
+        }
+
+        function closeDeleteConfirm(result) {
+            confirmOverlay.classList.remove('open');
+            confirmOverlay.setAttribute('aria-hidden', 'true');
+            if (confirmResolver) {
+                const resolver = confirmResolver;
+                confirmResolver = null;
+                resolver(Boolean(result));
+            }
+        }
+
+        function openRagActionModal(doc) {
+            if (!doc) return;
+            activeRagActionDoc = doc;
+            ragActionDoc.textContent = doc.displayName || doc.name || '문서';
+            ragActionList.style.display = 'flex';
+            ragRenameForm.classList.remove('open');
+            ragEditForm.classList.remove('open');
+            ragRenameInput.value = doc.name || '';
+            ragEditTextarea.value = '';
+            ragEditTextarea.disabled = false;
+            ragEditSaveBtn.disabled = false;
+            ragActionOverlay.classList.add('open');
+            ragActionOverlay.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            ragActionRenameBtn.focus();
+        }
+
+        function closeRagActionModal() {
+            activeRagActionDoc = null;
+            ragActionOverlay.classList.remove('open');
+            ragActionOverlay.setAttribute('aria-hidden', 'true');
+            ragActionList.style.display = 'flex';
+            ragRenameForm.classList.remove('open');
+            ragEditForm.classList.remove('open');
+            ragRenameInput.value = '';
+            ragEditTextarea.value = '';
+            ragEditTextarea.disabled = false;
+            ragEditSaveBtn.disabled = false;
+            document.body.style.overflow = '';
+        }
+
+        function openRagRenameForm() {
+            if (!activeRagActionDoc) return;
+            ragActionList.style.display = 'none';
+            ragEditForm.classList.remove('open');
+            ragRenameForm.classList.add('open');
+            ragRenameInput.value = activeRagActionDoc.name || '';
+            requestAnimationFrame(() => ragRenameInput.focus());
+        }
+
+        function isRagEditOpen() {
+            return ragEditForm.classList.contains('open');
+        }
+
+        function isRagRenameOpen() {
+            return ragRenameForm.classList.contains('open');
+        }
+
+        function getRagDocIdentity(doc) {
+            return {
+                normalizedDocId: (doc.id && !String(doc.id).startsWith('legacy-')) ? doc.id : '',
+                normalizedDocIndex: Number.isInteger(doc.index) ? doc.index : null,
+            };
+        }
+
+        async function openRagEditForm() {
+            if (!activeRagActionDoc) return;
+            ragActionList.style.display = 'none';
+            ragRenameForm.classList.remove('open');
+            ragEditForm.classList.add('open');
+            ragEditTextarea.value = '';
+            ragEditTextarea.disabled = true;
+            ragEditSaveBtn.disabled = true;
+            ragEditTextarea.placeholder = '문서 내용을 불러오는 중입니다...';
+            try {
+                const { normalizedDocId, normalizedDocIndex } = getRagDocIdentity(activeRagActionDoc);
+                const params = new URLSearchParams({
+                    session_id: activeRagActionDoc.sessionId || '',
+                    doc_id: normalizedDocId || '',
+                    old_file_name: activeRagActionDoc.name || '',
+                });
+                if (normalizedDocIndex !== null) params.set('doc_index', String(normalizedDocIndex));
+                const response = await fetch(apiUrl('/api/rag/document?' + params.toString()));
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || '문서 내용을 불러오지 못했습니다.');
+                ragEditTextarea.value = data.content || '';
+                ragEditTextarea.placeholder = '문서 내용을 입력하세요.';
+                ragEditTextarea.disabled = false;
+                ragEditSaveBtn.disabled = false;
+                requestAnimationFrame(() => ragEditTextarea.focus());
+            } catch (error) {
+                ragActionList.style.display = 'flex';
+                ragEditForm.classList.remove('open');
+                showMessage('error', networkErrorMessage(error, '/api/rag/document'), false);
+            }
+        }
+        function openImageLightbox(src) {
+            if (!src) return;
+            imageLightboxImg.src = src;
+            imageLightbox.classList.add('open');
+            imageLightbox.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageLightbox() {
+            imageLightbox.classList.remove('open');
+            imageLightbox.setAttribute('aria-hidden', 'true');
+            imageLightboxImg.removeAttribute('src');
+            document.body.style.overflow = '';
+        }
+
+        confirmOkBtn.addEventListener('click', () => closeDeleteConfirm(true));
+        confirmCancelBtn.addEventListener('click', () => closeDeleteConfirm(false));
+        confirmOverlay.addEventListener('click', (e) => {
+            if (e.target === confirmOverlay) closeDeleteConfirm(false);
+        });
+        imageLightboxClose.addEventListener('click', closeImageLightbox);
+        imageLightbox.addEventListener('click', (e) => {
+            if (e.target === imageLightbox) closeImageLightbox();
+        });
+        ragActionCancelBtn.addEventListener('click', closeRagActionModal);
+        ragActionRenameBtn.addEventListener('click', openRagRenameForm);
+        ragActionEditBtn.addEventListener('click', () => {
+            openRagEditForm();
+        });
+        ragRenameCancelBtn.addEventListener('click', () => {
+            ragActionList.style.display = 'flex';
+            ragRenameForm.classList.remove('open');
+            ragEditForm.classList.remove('open');
+            if (activeRagActionDoc) {
+                ragRenameInput.value = activeRagActionDoc.name || '';
+            }
+        });
+        ragEditCancelBtn.addEventListener('click', () => {
+            ragActionList.style.display = 'flex';
+            ragEditForm.classList.remove('open');
+            ragEditTextarea.value = '';
+            ragEditTextarea.disabled = false;
+            ragEditSaveBtn.disabled = false;
+        });
+        ragActionDeleteBtn.addEventListener('click', async () => {
+            if (!activeRagActionDoc) return;
+            await deleteRagDocument(activeRagActionDoc);
+        });
+        ragRenameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!activeRagActionDoc) return;
+            await renameRagDocument(activeRagActionDoc, ragRenameInput.value);
+        });
+        ragEditForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!activeRagActionDoc) return;
+            const content = String(ragEditTextarea.value || '').trim();
+            if (!content) {
+                showMessage('error', '문서 내용은 비워둘 수 없습니다.', false);
+                return;
+            }
+            const { normalizedDocId, normalizedDocIndex } = getRagDocIdentity(activeRagActionDoc);
+            ragEditTextarea.disabled = true;
+            ragEditSaveBtn.disabled = true;
+            try {
+                const response = await fetch(apiUrl('/api/rag/update_content'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: activeRagActionDoc.sessionId,
+                        doc_id: normalizedDocId,
+                        doc_index: normalizedDocIndex,
+                        old_file_name: activeRagActionDoc.name || '',
+                        content,
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || '내용 저장에 실패했습니다.');
+                activeRagActionDoc.id = data.doc_id || activeRagActionDoc.id;
+                activeRagActionDoc.chunks = Number(data.chunks || activeRagActionDoc.chunks || 0);
+                const updatedDocLabel = activeRagActionDoc.displayName || activeRagActionDoc.name || '문서';
+                closeRagActionModal();
+                renderRagDocList();
+                hintText.textContent = '문서 내용이 수정되었습니다: ' + updatedDocLabel;
+            } catch (error) {
+                ragEditTextarea.disabled = false;
+                ragEditSaveBtn.disabled = false;
+                showMessage('error', networkErrorMessage(error, '/api/rag/update_content'), false);
+            }
+        });
+        ragActionOverlay.addEventListener('click', (e) => {
+            // Prevent accidental close while editing or renaming.
+            if (e.target === ragActionOverlay && !isRagEditOpen() && !isRagRenameOpen()) {
+                closeRagActionModal();
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && imageLightbox.classList.contains('open')) {
+                closeImageLightbox();
+            }
+            if (e.key === 'Escape' && ragActionOverlay.classList.contains('open')) {
+                if (!isRagEditOpen() && !isRagRenameOpen()) {
+                    closeRagActionModal();
+                }
+            }
+        });
+        attachmentThumb.addEventListener('click', () => {
+            if (attachmentThumb.src) openImageLightbox(attachmentThumb.src);
+        });
+        chatContainer.addEventListener('click', (e) => {
+            const target = e.target;
+            if (!(target instanceof HTMLImageElement)) return;
+            if (!target.classList.contains('user-inline-thumb') && !target.classList.contains('assistant-inline-image')) return;
+            openImageLightbox(target.src || '');
+        });
+
+        chatInput.addEventListener('input', autoResizeInput);
+        chatInput.addEventListener('keydown', onInputKeydown);
+        chatInput.addEventListener('paste', onInputPaste);
+        sendBtn.addEventListener('click', sendMessage);
+        clearBtn.addEventListener('click', resetConversation);
+        attachBtn.addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', onImageSelected);
+        ragUploadBtn.addEventListener('click', () => ragFileInput.click());
+        ragFileInput.addEventListener('change', onRagFileSelected);
+        attachmentRemove.addEventListener('click', clearAttachment);
+
+        quickActions.querySelectorAll('.chip').forEach((chip) => {
+            chip.addEventListener('click', () => {
+                chatInput.value = chip.dataset.prompt || '';
+                autoResizeInput();
+                chatInput.focus();
+            });
+        });
+
+        function renderRagDocList() {
+            ragDocList.innerHTML = '';
+            if (ragDocContext.length === 0) {
+                const empty = document.createElement('li');
+                empty.className = 'rag-empty';
+                empty.textContent = '업로드된 문서가 없습니다.';
+                ragDocList.appendChild(empty);
+                return;
+            }
+            ragDocContext.forEach((doc) => {
+                const item = document.createElement('li');
+                item.className = 'rag-item';
+
+                const top = document.createElement('div');
+                top.className = 'rag-item-top';
+
+                const head = document.createElement('div');
+                head.className = 'rag-item-head';
+                const name = document.createElement('div');
+                name.className = 'rag-item-name';
+                name.textContent = doc.displayName || doc.name;
+                name.title = doc.displayName || doc.name;
+                head.appendChild(name);
+
+                const menuBtn = document.createElement('button');
+                menuBtn.className = 'rag-menu-btn';
+                menuBtn.type = 'button';
+                menuBtn.title = '문서 메뉴';
+                menuBtn.textContent = '⋮';
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openRagActionModal(doc);
+                });
+
+                top.appendChild(head);
+                top.appendChild(menuBtn);
+                item.appendChild(top);
+                ragDocList.appendChild(item);
+            });
+        }
+
+        async function renameRagDocument(doc, nextName) {
+            if (!doc || !doc.sessionId) return;
+            const trimmed = String(nextName).trim();
+            if (!trimmed || trimmed === doc.name) {
+                closeRagActionModal();
+                return;
+            }
+            const normalizedDocId = (doc.id && !String(doc.id).startsWith('legacy-')) ? doc.id : '';
+            const normalizedDocIndex = Number.isInteger(doc.index) ? doc.index : null;
+            try {
+                const response = await fetch(apiUrl('/api/rag/rename'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: doc.sessionId,
+                        doc_id: normalizedDocId,
+                        doc_index: normalizedDocIndex,
+                        old_file_name: doc.name || '',
+                        file_name: trimmed,
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || '이름 변경에 실패했습니다.');
+                doc.id = data.doc_id || doc.id;
+                doc.name = data.file_name || trimmed;
+                doc.displayName = doc.name;
+                closeRagActionModal();
+                renderRagDocList();
+            } catch (error) {
+                closeRagActionModal();
+                showMessage('error', networkErrorMessage(error, '/api/rag/rename'), false);
+                await fetchRagDocList();
+            }
+        }
+
+        async function deleteRagDocument(doc) {
+            if (!doc || !doc.sessionId) return;
+            closeRagActionModal();
+            const ok = await showDeleteConfirm('이 문서를 삭제할까요?');
+            if (!ok) {
+                return;
+            }
+            const normalizedDocId = (doc.id && !String(doc.id).startsWith('legacy-')) ? doc.id : '';
+            const normalizedDocIndex = Number.isInteger(doc.index) ? doc.index : null;
+            try {
+                const response = await fetch(apiUrl('/api/rag/delete'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: doc.sessionId,
+                        doc_id: normalizedDocId,
+                        doc_index: normalizedDocIndex,
+                        old_file_name: doc.name || '',
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || '문서 삭제에 실패했습니다.');
+                ragDocContext = ragDocContext.filter((x) => !(x.id === doc.id && x.sessionId === doc.sessionId));
+                renderRagDocList();
+            } catch (error) {
+                showMessage('error', networkErrorMessage(error, '/api/rag/delete'), false);
+                await fetchRagDocList();
+            }
+        }
+
+        async function fetchRagDocList() {
+            try {
+                const response = await fetch(apiUrl('/api/rag/list?session_id=' + encodeURIComponent(ragSessionId)));
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || 'RAG 목록을 불러오지 못했습니다.');
+                const files = Array.isArray(data.files) ? data.files : [];
+                ragDocContext = files.map((f, idx) => ({
+                    id: f.doc_id || ('legacy-' + idx),
+                    index: Number.isInteger(f.doc_index) ? f.doc_index : idx,
+                    sessionId: data.session_id || ragSessionId,
+                    name: f.file_name || 'unknown',
+                    displayName: f.file_name || 'unknown',
+                    chunks: Number(f.chunks || 0),
+                }));
+                if (ragDocContext.length === 0) {
+                    // Fallback: show persisted documents from other sessions too.
+                    const allResp = await fetch(apiUrl('/api/rag/list_all'));
+                    const allData = await allResp.json();
+                    if (allResp.ok) {
+                        const allFiles = Array.isArray(allData.files) ? allData.files : [];
+                        ragDocContext = allFiles.map((f, idx) => ({
+                            id: f.doc_id || ('legacy-all-' + idx),
+                            index: Number.isInteger(f.doc_index) ? f.doc_index : idx,
+                            sessionId: f.session_id || '',
+                            name: f.file_name || 'unknown',
+                            displayName: (f.file_name || 'unknown') + (f.session_id ? ' [' + f.session_id.slice(0, 8) + ']' : ''),
+                            chunks: Number(f.chunks || 0),
+                        }));
+                    }
+                }
+                renderRagDocList();
+                refreshAttachmentUI();
+            } catch (_error) {
+                // Keep UI usable even if list sync fails.
+                renderRagDocList();
+            }
+        }
+
+        function autoResizeInput() {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + 'px';
+        }
+
+        function onInputKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function isRagSaveCommandText(text) {
+            const t = String(text || '').trim();
+            if (!t) return false;
+            if (/^[*-]?\s*rag\s*저장(\s*해\s*줘)?\s*$/i.test(t)) return true;
+            if (/[*-]\s*rag\s*저장\s*$/i.test(t)) return true;
+            if (/rag\s*에\s*저장\s*해\s*줘/i.test(t)) return true;
+            if (/rag\s*정보\s*로?\s*추가\s*해\s*줘/i.test(t)) return true;
+            return false;
+        }
+
+        function setIntroVisibility(show) {
+            emptyState.style.display = show ? 'block' : 'none';
+            quickActions.style.display = show ? 'flex' : 'none';
+            appRoot.classList.toggle('chat-active', !show);
+        }
+
+        function clearAttachment() {
+            attachedImage = null;
+            imageInput.value = '';
+            attachmentBox.style.display = 'none';
+            attachmentThumb.removeAttribute('src');
+            attachmentThumb.style.display = 'none';
+            attachmentDoc.style.display = 'none';
+            attachmentLabel.textContent = '';
+        }
+
+        function refreshAttachmentUI() {
+            const imageActive = attachedImage;
+            if (!imageActive) {
+                attachmentBox.style.display = 'none';
+                attachmentThumb.removeAttribute('src');
+                attachmentThumb.style.display = 'none';
+                attachmentDoc.style.display = 'none';
+                attachmentLabel.textContent = '';
+                return;
+            }
+            attachmentBox.style.display = 'inline-flex';
+            attachmentThumb.style.display = 'block';
+            attachmentDoc.style.display = 'none';
+            attachmentThumb.src = imageActive.previewUrl || ('data:' + (imageActive.mimeType || 'image/png') + ';base64,' + imageActive.base64);
+            attachmentLabel.textContent = '';
+        }
+
+        async function uploadRagFile(file) {
+            const formData = new FormData();
+            formData.append('session_id', ragSessionId);
+            formData.append('file', file);
+
+            const response = await fetch(apiUrl('/api/rag/upload'), {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || '문서 업로드에 실패했습니다.');
+            ragDocContext.push({
+                id: data.doc_id || '',
+                index: Number.MAX_SAFE_INTEGER,
+                sessionId: data.session_id || ragSessionId,
+                name: data.file_name,
+                displayName: data.file_name,
+                chunks: data.chunks,
+            });
+            hintText.textContent = '문서 업로드 완료: ' + data.file_name + ' (' + data.chunks + ' chunks)';
+            renderRagDocList();
+            refreshAttachmentUI();
+        }
+
+        function isDocumentFile(file) {
+            const lower = (file.name || '').toLowerCase();
+            return lower.endsWith('.pdf') || lower.endsWith('.ppt') || lower.endsWith('.pptx') || lower.endsWith('.txt');
+        }
+
+        async function onRagFileSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (file.size > 50 * 1024 * 1024) {
+                showMessage('error', '파일은 50MB 이하만 첨부할 수 있습니다.', false);
+                return;
+            }
+            if (!isDocumentFile(file)) {
+                showMessage('error', '지원 파일 형식: pdf, ppt, pptx, txt', false);
+                return;
+            }
+
+            try {
+                await uploadRagFile(file);
+            } catch (error) {
+                showMessage('error', networkErrorMessage(error, '/api/rag/upload'), false);
+            } finally {
+                ragFileInput.value = '';
+            }
+        }
+
+        async function onImageSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            await attachImageFile(file, '이미지 첨부 감지: 비전 모델로 자동 전환했습니다.');
+        }
+
+        async function onInputPaste(event) {
+            const clipboard = event.clipboardData;
+            const items = clipboard && clipboard.items ? Array.from(clipboard.items) : [];
+            const imageItem = items.find((item) => item && item.type && item.type.startsWith('image/'));
+            if (!imageItem) return;
+
+            event.preventDefault();
+            const file = imageItem.getAsFile();
+            if (!file) return;
+            await attachImageFile(file, '클립보드 이미지 감지: 비전 모델로 자동 전환했습니다.');
+        }
+
+        function readAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+                reader.onerror = () => reject(new Error('이미지 읽기에 실패했습니다.'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function attachImageFile(file, visionSwitchMessage) {
+            if (file.size > 50 * 1024 * 1024) {
+                showMessage('error', '파일은 50MB 이하만 첨부할 수 있습니다.', false);
+                clearAttachment();
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                showMessage('error', '이미지 파일만 첨부할 수 있습니다.', false);
+                clearAttachment();
+                return;
+            }
+            try {
+                const result = await readAsDataUrl(file);
+                const base64 = result.includes(',') ? result.split(',')[1] : '';
+                if (!base64) {
+                    showMessage('error', '이미지 인코딩에 실패했습니다.', false);
+                    clearAttachment();
+                    return;
+                }
+                attachedImage = { base64: base64, mimeType: file.type, name: file.name, previewUrl: result };
+
+                const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+                const selectedIsVision = selectedOption && selectedOption.dataset.vision === '1';
+                if (!selectedIsVision) {
+                    const firstVision = Array.from(modelSelect.options).find((opt) => opt.dataset.vision === '1');
+                    if (firstVision) {
+                        modelSelect.value = firstVision.value;
+                        hintText.textContent = visionSwitchMessage || '이미지 첨부 감지: 비전 모델로 자동 전환했습니다.';
+                    } else {
+                        hintText.textContent = '비전 모델이 없습니다. 터미널에서: ollama pull gemma3:latest (또는 llava:latest)';
+                    }
+                }
+                refreshAttachmentUI();
+            } catch (_error) {
+                showMessage('error', '이미지 읽기에 실패했습니다.', false);
+                clearAttachment();
+            }
+        }
+
+        function updateHealthUI(isOk, detail, source = 'ollama') {
+            statusDot.classList.remove('ok', 'fail');
+            if (isOk) {
+                statusDot.classList.add('ok');
+                statusText.textContent = 'Ollama 연결됨';
+                hintText.textContent = '준비 완료 (API: ' + API_BASE + '). 메시지를 입력해 대화를 시작하세요.';
+            } else {
+                statusDot.classList.add('fail');
+                statusText.textContent = source === 'backend' ? '백엔드 미연결' : 'Ollama 미연결';
+                hintText.textContent = detail || ('API 연결 실패: ' + apiUrl('/api/health'));
+            }
+        }
+
+        function networkErrorMessage(error, endpoint) {
+            if (error && error.message === 'Failed to fetch') {
+                return '백엔드 API 연결 실패: ' + apiUrl(endpoint);
+            }
+            return (error && error.message) || '알 수 없는 오류가 발생했습니다.';
+        }
+
+        function isVisionModelName(name) {
+            const lower = (name || '').toLowerCase();
+            return (
+                lower.includes('gemma3') ||
+                lower.includes('llava') ||
+                lower.includes('bakllava') ||
+                lower.includes('vision') ||
+                lower.includes('moondream') ||
+                lower.includes('qwen2-vl') ||
+                lower.includes('minicpm-v')
+            );
+        }
+
+        async function fetchHealth() {
+            try {
+                const response = await fetch(apiUrl('/api/health'));
+                const data = await response.json();
+                updateHealthUI(data.status === 'ok', data.detail || '', 'ollama');
+            } catch (error) {
+                updateHealthUI(false, networkErrorMessage(error, '/api/health'), 'backend');
+            }
+        }
+
+        async function fetchModels() {
+            modelSelect.innerHTML = '<option>모델 로딩 중...</option>';
+            try {
+                const response = await fetch(apiUrl('/api/models'));
+                if (!response.ok) throw new Error('모델 목록을 불러오지 못했습니다.');
+
+                const data = await response.json();
+                const models = Array.isArray(data.models) ? data.models : [];
+
+                if (models.length === 0) {
+                    modelSelect.innerHTML = '<option value="gemma3:latest">gemma3:latest</option>';
+                    return;
+                }
+
+                modelSelect.innerHTML = '';
+                models.forEach((modelName) => {
+                    const option = document.createElement('option');
+                    option.value = modelName;
+                    const vision = isVisionModelName(modelName);
+                    option.textContent = vision ? (modelName + ' (Vision)') : modelName;
+                    option.dataset.vision = vision ? '1' : '0';
+                    if (modelName === data.default) option.selected = true;
+                    modelSelect.appendChild(option);
+                });
+            } catch (error) {
+                modelSelect.innerHTML = '<option value="gemma3:latest">gemma3:latest</option>';
+                showMessage('error', networkErrorMessage(error, '/api/models'));
+            }
+        }
+
+        function saveConversations() {
+            try {
+                localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(conversations));
+            } catch (_error) {}
+        }
+
+        function loadConversations() {
+            try {
+                const raw = localStorage.getItem(CONVERSATION_STORAGE_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                if (!Array.isArray(parsed)) return [];
+                return parsed.filter((c) => c && typeof c.id === 'string');
+            } catch (_error) {
+                return [];
+            }
+        }
+
+        function getActiveConversation() {
+            if (!activeConversationId) return null;
+            return conversations.find((c) => c.id === activeConversationId) || null;
+        }
+
+        function ensureActiveConversation(firstUserText) {
+            let active = getActiveConversation();
+            if (active) return active;
+            const id = (window.crypto && typeof window.crypto.randomUUID === 'function')
+                ? window.crypto.randomUUID()
+                : ('conv-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+            active = {
+                id,
+                title: String(firstUserText || '새 대화').slice(0, 40),
+                messages: [],
+                history: [],
+                created_at: Date.now(),
+                updated_at: Date.now(),
+            };
+            conversations.unshift(active);
+            activeConversationId = id;
+            renderConversationList();
+            saveConversations();
+            return active;
+        }
+
+        function appendToActiveConversation(role, content) {
+            const active = ensureActiveConversation(content);
+            active.messages.push({ role, content });
+            if (role === 'user' || role === 'assistant') {
+                active.history.push({ role, content });
+            }
+            active.updated_at = Date.now();
+            if (role === 'user' && active.title === '새 대화') {
+                active.title = String(content || '새 대화').slice(0, 40);
+            }
+            renderConversationList();
+            saveConversations();
+        }
+
+        function renderConversationList() {
+            promptList.innerHTML = '';
+            if (!conversations.length) return;
+            conversations
+                .slice()
+                .sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0))
+                .forEach((conv) => {
+                    const item = document.createElement('li');
+                    item.className = 'prompt-item' + (conv.id === activeConversationId ? ' active' : '');
+                    item.title = conv.title || '새 대화';
+
+                    const label = document.createElement('span');
+                    label.className = 'prompt-item-label';
+                    label.textContent = conv.title || '새 대화';
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'prompt-delete-btn';
+                    delBtn.type = 'button';
+                    delBtn.title = '대화 삭제';
+                    delBtn.textContent = '×';
+                    delBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const ok = await showDeleteConfirm('삭제하겠습니까?');
+                        if (!ok) return;
+                        conversations = conversations.filter((c) => c.id !== conv.id);
+                        if (activeConversationId === conv.id) {
+                            activeConversationId = null;
+                            chatHistory = [];
+                            chatContainer.innerHTML = '';
+                            setIntroVisibility(true);
+                            if (chatTitle) chatTitle.textContent = '새 대화';
+                        }
+                        saveConversations();
+                        renderConversationList();
+                    });
+
+                    item.appendChild(label);
+                    item.appendChild(delBtn);
+                    item.addEventListener('click', () => {
+                        activeConversationId = conv.id;
+                        chatHistory = Array.isArray(conv.history) ? conv.history.slice() : [];
+                        chatContainer.innerHTML = '';
+                        const messages = Array.isArray(conv.messages) ? conv.messages : [];
+                        messages.forEach((m) => showMessage(m.role || 'assistant', m.content || '', false));
+                        setIntroVisibility(messages.length === 0);
+                        renderConversationList();
+                        if (chatTitle) chatTitle.textContent = (conv.title || '새 대화').slice(0, 40);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                    promptList.appendChild(item);
+                });
+        }
+
+        function showMessage(role, content, isTyping, options = {}) {
+            const {
+                prepend = false,
+                afterEl = null,
+                scrollToTop = false,
+                scrollToBottom = false,
+                scrollIntoViewTop = false,
+                imageThumbUrl = null,
+            } = options;
+            const message = document.createElement('article');
+            message.className = 'msg ' + role;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+
+            if (isTyping) {
+                bubble.innerHTML = '<span class="typing" aria-label="응답 생성 중"><span></span><span></span><span></span></span>';
+                message.id = 'typingMessage';
+            } else {
+                if (role === 'assistant') {
+                    bubble.innerHTML = renderAssistantMarkdown(content);
+                } else if (role === 'user') {
+                    const safe = escapeHtml(content || '').replace(/\n/g, '<br>');
+                    if (safe) {
+                        bubble.innerHTML = safe;
+                    } else {
+                        bubble.innerHTML = '';
+                    }
+                    if (imageThumbUrl) {
+                        const thumb = document.createElement('img');
+                        thumb.className = 'user-inline-thumb';
+                        thumb.src = imageThumbUrl;
+                        thumb.alt = '첨부 이미지 썸네일';
+                        bubble.appendChild(thumb);
+                    }
+                } else {
+                    bubble.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
+                }
+            }
+
+            message.appendChild(bubble);
+            if (afterEl && afterEl.parentNode === chatContainer) {
+                if (afterEl.nextSibling) {
+                    chatContainer.insertBefore(message, afterEl.nextSibling);
+                } else {
+                    chatContainer.appendChild(message);
+                }
+            } else if (prepend) {
+                chatContainer.prepend(message);
+            } else {
+                chatContainer.appendChild(message);
+            }
+            if (scrollToTop) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            if (scrollToBottom) {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }
+            if (scrollIntoViewTop) {
+                const topbar = document.querySelector('.topbar');
+                const topOffset = topbar ? topbar.offsetHeight + 10 : 10;
+                const y = Math.max(0, window.scrollY + message.getBoundingClientRect().top - topOffset);
+                window.scrollTo({ top: y, behavior: 'auto' });
+            }
+            return message;
+        }
+
+        function removeTypingMessage() {
+            const typing = document.getElementById('typingMessage');
+            if (typing) typing.remove();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderAssistantMarkdown(text) {
+            if (!text) return '<div class="md-content"></div>';
+            const normalized = String(text)
+                .replace(/\r\n/g, '\n')
+                .replace(/[ \t]+\n/g, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+            const compactedLists = normalized
+                .replace(/\n{2,}(?=\s*[-*]\s)/g, '\n')
+                .replace(/\n{2,}(?=\s*\d+\.\s)/g, '\n')
+                .replace(/(\n\d+\.\s[^\n]+)\n{2,}(?=\d+\.\s)/g, '$1\n')
+                .replace(/(\n[-*]\s[^\n]+)\n{2,}(?=[-*]\s)/g, '$1\n');
+            if (window.marked && window.DOMPurify) {
+                marked.setOptions({ breaks: false, gfm: true });
+                const unsafe = marked.parse(compactedLists);
+                const safe = DOMPurify.sanitize(unsafe);
+                return '<div class="md-content">' + postProcessAssistantHtml(safe) + '</div>';
+            }
+            return '<div class="md-content">' + escapeHtml(compactedLists).replace(/\n/g, '<br>') + '</div>';
+        }
+
+        function isLikelyImageUrl(rawUrl) {
+            if (!rawUrl) return false;
+            const url = String(rawUrl).trim();
+            if (url.startsWith('data:image/')) return true;
+            const clean = url.split('#')[0].split('?')[0].toLowerCase();
+            return /\.(png|jpe?g|gif|webp|avif|svg|bmp)$/i.test(clean);
+        }
+
+        function postProcessAssistantHtml(html) {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = html || '';
+            const links = wrapper.querySelectorAll('a[href]');
+            links.forEach((linkEl) => {
+                const href = String(linkEl.getAttribute('href') || '').trim();
+                if (!isLikelyImageUrl(href)) return;
+
+                const img = document.createElement('img');
+                img.className = 'assistant-inline-image';
+                img.src = href;
+                img.alt = (linkEl.textContent || '응답 이미지').trim() || '응답 이미지';
+                img.loading = 'lazy';
+                img.decoding = 'async';
+                img.referrerPolicy = 'no-referrer';
+                linkEl.insertAdjacentElement('afterend', img);
+            });
+            return wrapper.innerHTML;
+        }
+
+        function applyFadeInToMdContent(container) {
+            const node = container.querySelector('.md-content');
+            if (!node) return;
+            node.classList.add('fade-enter');
+            requestAnimationFrame(() => {
+                node.classList.add('fade-show');
+            });
+        }
+
+        function renderMarkdownBlock(text) {
+            const normalized = String(text || '')
+                .replace(/\r\n/g, '\n')
+                .replace(/[ \t]+\n/g, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/\n{2,}(?=\s*[-*•]\s)/g, '\n')
+                .replace(/\n{2,}(?=\s*\d+\.\s)/g, '\n')
+                .trim();
+            if (!normalized) return '';
+            if (window.marked && window.DOMPurify) {
+                marked.setOptions({ breaks: false, gfm: true });
+                return postProcessAssistantHtml(DOMPurify.sanitize(marked.parse(normalized)));
+            }
+            return escapeHtml(normalized).replace(/\n/g, '<br>');
+        }
+
+        function progressivelyRenderAssistant(messageEl, finalText) {
+            const bubble = messageEl && messageEl.querySelector ? messageEl.querySelector('.bubble') : null;
+            if (!bubble) return;
+            const source = String(finalText || '응답이 비어 있습니다.');
+            const blocks = source
+                .replace(/\r\n/g, '\n')
+                .trim()
+                .split(/\n{2,}/)
+                .map((s) => s.trim())
+                .filter(Boolean);
+            if (blocks.length === 0) {
+                bubble.innerHTML = renderAssistantMarkdown(source);
+                applyFadeInToMdContent(bubble);
+                return;
+            }
+            bubble.innerHTML = '<div class="md-content"></div>';
+            const contentRoot = bubble.querySelector('.md-content');
+            if (!contentRoot) return;
+            let index = 0;
+
+            function animateBlock(el) {
+                if (!el || typeof el.animate !== 'function') return;
+                el.animate(
+                    [
+                        { opacity: 0, transform: 'translateY(8px)' },
+                        { opacity: 1, transform: 'translateY(0)' },
+                    ],
+                    {
+                        duration: 460,
+                        easing: 'cubic-bezier(0.2, 0.75, 0.2, 1)',
+                        fill: 'forwards',
+                    }
+                );
+            }
+
+            function tick() {
+                const blockEl = document.createElement('div');
+                blockEl.className = 'md-block';
+                blockEl.innerHTML = renderMarkdownBlock(blocks[index]);
+                contentRoot.appendChild(blockEl);
+                animateBlock(blockEl);
+                index += 1;
+                if (index >= blocks.length) return;
+                setTimeout(tick, 620);
+            }
+
+            tick();
+        }
+
+        function resetConversation() {
+            activeConversationId = null;
+            chatHistory = [];
+            chatContainer.innerHTML = '';
+            attachedImage = null;
+            imageInput.value = '';
+            ragFileInput.value = '';
+            refreshAttachmentUI();
+            fetchRagDocList();
+            setIntroVisibility(true);
+            chatInput.focus();
+            renderConversationList();
+            if (chatTitle) chatTitle.textContent = '새 대화';
+        }
+
+        async function sendMessage() {
+            const content = chatInput.value.trim();
+            if ((!content && !attachedImage) || isLoading) return;
+            const imagePayload = attachedImage;
+            const hasRagContext = ragDocContext.length > 0;
+
+            setIntroVisibility(false);
+            const userPreview = content;
+            const userImagePreviewUrl = imagePayload
+                ? (imagePayload.previewUrl || ('data:' + (imagePayload.mimeType || 'image/png') + ';base64,' + imagePayload.base64))
+                : null;
+
+            // Start each new question from a clean visible viewport.
+            // History is preserved in chatHistory and conversation list.
+            chatContainer.innerHTML = '';
+            const active = ensureActiveConversation(content || (hasRagContext ? '문서 기반 질의' : '이미지 질의'));
+            if (chatTitle) chatTitle.textContent = (active.title || '새 대화').slice(0, 40);
+            const userMessageEl = showMessage('user', userPreview, false, {
+                prepend: true,
+                scrollToTop: true,
+                imageThumbUrl: userImagePreviewUrl,
+            });
+            appendToActiveConversation('user', userPreview || '이미지 첨부');
+
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+            imageInput.value = '';
+            attachedImage = null;
+            refreshAttachmentUI();
+
+            isLoading = true;
+            sendBtn.disabled = true;
+            showMessage('assistant', '', true, { afterEl: userMessageEl });
+            window.scrollTo({ top: 0, behavior: 'auto' });
+
+            try {
+                const response = await fetch(apiUrl('/api/chat'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: content || '첨부 이미지를 분석해줘.',
+                        model: modelSelect.value,
+                        history: chatHistory,
+                        image_base64: imagePayload ? imagePayload.base64 : null,
+                        image_mime_type: imagePayload ? imagePayload.mimeType : null,
+                        image_name: imagePayload ? imagePayload.name : null,
+                        rag_session_id: ragSessionId,
+                        use_rag: true,
+                    }),
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || '응답 생성 중 오류가 발생했습니다.');
+
+                removeTypingMessage();
+                const assistantMessageEl = showMessage('assistant', '', false, { afterEl: userMessageEl });
+                progressivelyRenderAssistant(assistantMessageEl, data.response || '응답이 비어 있습니다.');
+                appendToActiveConversation('assistant', data.response || '');
+                chatHistory.push({ role: 'user', content: userPreview || '첨부 이미지를 분석해줘.' });
+                chatHistory.push({ role: 'assistant', content: data.response || '' });
+                if (isRagSaveCommandText(userPreview)) {
+                    await fetchRagDocList();
+                }
+            } catch (error) {
+                removeTypingMessage();
+                showMessage('error', networkErrorMessage(error, '/api/chat'), false, { afterEl: userMessageEl });
+                appendToActiveConversation('error', networkErrorMessage(error, '/api/chat'));
+            } finally {
+                isLoading = false;
+                sendBtn.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        async function init() {
+            await resolveApiBase();
+            await Promise.all([fetchHealth(), fetchModels()]);
+            conversations = loadConversations();
+            renderConversationList();
+            await fetchRagDocList();
+            setIntroVisibility(true);
+            chatInput.focus();
+        }
+
+        init();
+    </script>
+</body>
+</html>
