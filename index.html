@@ -1352,11 +1352,14 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
     <script>
+        const GCP_API_BASE = 'http://34.64.142.51:8000';
         let API_BASE = (window.__API_BASE_URL && typeof window.__API_BASE_URL === 'string')
             ? window.__API_BASE_URL.replace(/\/$/, '')
-            : 'http://127.0.0.1:8000';
+            : GCP_API_BASE;
 
         const LEGACY_API_BASES = [
+            GCP_API_BASE,
+            'http://34.64.142.51:8010',
             'http://127.0.0.1:8000',
             'http://localhost:8000',
             'http://127.0.0.1:8010',

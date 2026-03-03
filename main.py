@@ -16,7 +16,8 @@ from pydantic import BaseModel, Field
 from pypdf import PdfReader
 from pptx import Presentation
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+GCP_PUBLIC_IP = os.getenv("GCP_PUBLIC_IP", "34.64.142.51").strip()
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", f"http://{GCP_PUBLIC_IP}:11434").rstrip("/")
 DEFAULT_MODEL = "gemma3:latest"
 VISION_MODEL_HINTS = (
     "gemma3",
@@ -29,13 +30,18 @@ VISION_MODEL_HINTS = (
 )
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 MAX_CHUNKS_PER_SESSION = 300
-RAG_STORE_PATH = Path(os.getenv("RAG_STORE_PATH", "backend/rag_store.json"))
+RAG_STORE_PATH = Path(os.getenv("RAG_STORE_PATH", "rag_store.json"))
+
+ALLOWED_ORIGINS_ENV = os.getenv("ALLOWED_ORIGINS", "*")
+ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",") if origin.strip()]
+if not ALLOWED_ORIGINS:
+    ALLOWED_ORIGINS = ["*"]
 
 app = FastAPI(title="NOS LLM Chat API", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -205,7 +211,7 @@ def _extract_ollama_error(exc: httpx.HTTPStatusError) -> str:
 
 
 async def ollama_request(method: str, path: str, payload: dict | None = None, timeout: float = 120.0):
-    # Local LLM calls should ignore system proxy settings to avoid localhost routing issues.
+    # Ignore proxy env vars to keep direct connectivity to Ollama host.
     async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
         try:
             response = await client.request(method, f"{OLLAMA_BASE_URL}{path}", json=payload)
@@ -1000,12 +1006,34 @@ if __name__ == "__main__":
                 return candidate
         return preferred_port
 
-    requested_port = int(os.getenv("BACKEND_PORT", "8000"))
-    resolved_port = _resolve_backend_port(requested_port)
-    if resolved_port != requested_port:
-        print(
-            f"[NOS] Port {requested_port} is already in use. "
-            f"Starting backend on port {resolved_port} instead."
-        )
-    uvicorn.run(app, host="0.0.0.0", port=resolved_port)
+    def _safe_int(value: str | None, fallback: int) -> int:
+        try:
+            if value is None:
+                return fallback
+            parsed = int(str(value).strip())
+            return parsed if 1 <= parsed <= 65535 else fallback
+        except ValueError:
+            return fallback
+
+    host = (os.getenv("API_HOST", "0.0.0.0") or "0.0.0.0").strip()
+    managed_port = os.getenv("PORT")
+    requested_port = _safe_int(managed_port, _safe_int(os.getenv("BACKEND_PORT"), 8000))
+    use_fallback_port_scan = not bool((managed_port or "").strip())
+
+    resolved_port = requested_port
+    if use_fallback_port_scan:
+        resolved_port = _resolve_backend_port(requested_port, host=host)
+        if resolved_port != requested_port:
+            print(
+                f"[NOS] Port {requested_port} is already in use. "
+                f"Starting backend on port {resolved_port} instead."
+            )
+
+    uvicorn.run(
+        app,
+        host=host,
+        port=resolved_port,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
+    )
 

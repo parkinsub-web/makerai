@@ -5,7 +5,15 @@ services:
     working_dir: /app
     volumes:
       - .:/app
-    command: bash -c "pip install -r requirements.txt && python main.py"
+    environment:
+      - PORT=8000
+      - BACKEND_PORT=8000
+      - API_HOST=0.0.0.0
+      - OLLAMA_BASE_URL=http://34.64.142.51:11434
+      - GCP_PUBLIC_IP=34.64.142.51
+      - RAG_STORE_PATH=/app/rag_store.json
+      - ALLOWED_ORIGINS=*
+    command: sh -c "pip install -r requirements.txt && python main.py"
     ports:
-      - "5000:5000"
+      - "8000:8000"
     restart: always
